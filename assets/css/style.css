@@ -7543,6 +7543,7 @@ a.text-theme:hover,
   width: 100%;
   max-width: 465px;
   gap: 15px;
+  height: max-content;
 }
 
 .newsletter-form .form-group {
