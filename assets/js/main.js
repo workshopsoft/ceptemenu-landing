@@ -278,48 +278,45 @@
     var invalidCls = "is-invalid";
     var $email = '[name="email"]';
     var $validation =
-        '[name="name"],[name="email"],[name="subject"],[name="number"],[name="message"]'; // Must be use (,) without any space
+        '[name="name"],[name="email"],[name="phone"],[name="message"]'; // Must be use (,) without any space
     var formMessages = $(".form-messages");
 
     function sendContact() {
-        var formData = $(form).serialize();
-        var valid;
-        valid = validateContact();
-        if (valid) {
-            jQuery
-                .ajax({
-                    url: $(form).attr("action"),
-                    data: formData,
-                    type: "POST",
-                })
-                .done(function (response) {
-                    // Make sure that the formMessages div has the 'success' class.
+
+        if (!validateContact())
+            return;
+
+        const formData = new FormData(document.getElementById("contactForm"));
+        const object = Object.fromEntries(formData);
+        const json = JSON.stringify(object);
+
+        fetch($(form).attr("action"), {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+            body: json,
+        })
+            .then(async (response) => {
+                let json = await response.json();
+                if (response.status === 200) {
+                    formMessages.html(json.message);
                     formMessages.removeClass("error");
                     formMessages.addClass("success");
-                    // Set the message text.
-                    formMessages.text(response);
-                    // Clear the form.
-                    $(
-                        form +
-                            ' input:not([type="submit"]),' +
-                            form +
-                            " textarea"
-                    ).val("");
-                })
-                .fail(function (data) {
-                    // Make sure that the formMessages div has the 'error' class.
+                } else {
+                    console.log(response);
                     formMessages.removeClass("success");
                     formMessages.addClass("error");
-                    // Set the message text.
-                    if (data.responseText !== "") {
-                        formMessages.html(data.responseText);
-                    } else {
-                        formMessages.html(
-                            "Oops! An error occured and your message could not be sent."
-                        );
-                    }
-                });
-        }
+                    formMessages.html(json.message);
+                }
+            })
+            .catch((error) => {
+                console.log(error);
+                formMessages.removeClass("success");
+                formMessages.addClass("error");
+                formMessages.html("Bir hata oluştu!");
+            });
     }
 
     function validateContact() {
